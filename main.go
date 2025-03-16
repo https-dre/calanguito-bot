@@ -19,6 +19,10 @@ var (
 			Name:        "ping",
 			Description: "Responde com Pong!",
 		},
+		{
+			Name: "calanguito",
+			Description: "Apresenta o calanguito!",
+		},
 	}
 )
 
@@ -64,7 +68,6 @@ func main() {
     <-stop
 
     // Fecha a conexão
-	dccommands.RemoveCommands(dg)
     dg.Close()
 }
 
@@ -79,7 +82,35 @@ func handleSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Content: "🏓 Pong!",
 			},
 		})
+	case "calanguito":
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Olá! Eu sou o calanguito! 🦎",
+			},
+		})
 	}
+}
+
+func listRoles(s *discordgo.Session, m *discordgo.MessageCreate) {
+	// Pega o servidor onde a mensagem foi enviada
+	guildID := m.GuildID
+	
+	// Obtem todos os cargos do servidor
+	roles, err := s.GuildRoles(guildID)
+	if err != nil {
+		s.ChannelMessageSend(m.ChannelID, "Erro ao obter os cargos do servidor.")
+		return
+	}
+
+	// Cria uma string para listar os cargos
+	roleList := "Aqui estão os cargos deste servidor:\n"
+	for _, role := range roles {
+		roleList += fmt.Sprintf("Nome: %s | ID: %s\n", role.Name, role.ID)
+	}
+
+	// Envia a lista de cargos
+	s.ChannelMessageSend(m.ChannelID, roleList)
 }
 
 /* Sempre que uma mensagem for enviada ao servidor, essa função será chamada */
@@ -96,7 +127,13 @@ func handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func userJoin (s *discordgo.Session, m *discordgo.GuildMemberAdd) {
+	roleID := "1350901129608826950"
 	s.ChannelMessageSend(m.GuildID, fmt.Sprintf("Bem-vindo, %s!", m.User.Username))
+	err := s.GuildMemberRoleAdd(m.GuildID, m.User.ID, roleID)
+	if err != nil {
+		fmt.Println("Erro ao adicionar cargo ao usuário,", err)
+		return
+	}
 }
 
 func reactionAdded(_ *discordgo.Session, r *discordgo.MessageReactionAdd) {
@@ -104,7 +141,7 @@ func reactionAdded(_ *discordgo.Session, r *discordgo.MessageReactionAdd) {
 }
 
 func quitVoiceChannel(s *discordgo.Session, data *discordgo.VoiceStateUpdate) {
-	user, err := s.User(data.UserID)
+	_, err := s.User(data.UserID)
 	if err != nil {
 		fmt.Println("Erro ao obter usuário,", err)
 	}
@@ -117,7 +154,7 @@ func quitVoiceChannel(s *discordgo.Session, data *discordgo.VoiceStateUpdate) {
 		
 		for _, ch := range channels {
 			if strings.Contains(strings.ToLower(ch.Name), "comandos") {
-				s.ChannelMessageSend(ch.ID, fmt.Sprintf("@%s saiu da call!", user.Username))
+				//s.ChannelMessageSend(ch.ID, fmt.Sprintf("@%s saiu da call!", user.Username))
 				break
 			}
 		}
