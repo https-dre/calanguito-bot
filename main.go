@@ -1,6 +1,7 @@
 package main
 
 import (
+	dccommands "calango-bot/pkg/commands"
 	"fmt"
 	"os"
 	"os/signal"
@@ -11,7 +12,15 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var voiceConnections = make(map[string]*discordgo.VoiceConnection)
+var (
+	voiceConnections = make(map[string]*discordgo.VoiceConnection)
+	commands         = []*discordgo.ApplicationCommand{
+		{
+			Name:        "ping",
+			Description: "Responde com Pong!",
+		},
+	}
+)
 
 func main() {
 	erro := godotenv.Load()
@@ -33,18 +42,20 @@ func main() {
 		fmt.Println("Erro ao criar sessão do Discord,", err)
 		return
 	}
-
+	
+	dg.AddHandler(handleSlashCommand)
 	dg.AddHandler(handleMessage)
 	dg.AddHandler(userJoin)
 	dg.AddHandler(reactionAdded)
 	dg.AddHandler(quitVoiceChannel)
-
+	
 	err = dg.Open()
     if err != nil {
         fmt.Println("Erro ao conectar com o Discord,", err)
         return
     }
 
+	dccommands.RegisterCommands(dg, commands)
     fmt.Println("Bot está rodando. Pressione CTRL+C para encerrar.")
 
     // Aguarde até que o bot seja encerrado
@@ -53,7 +64,22 @@ func main() {
     <-stop
 
     // Fecha a conexão
+	dccommands.RemoveCommands(dg)
     dg.Close()
+}
+
+// Manipula os comandos de barra
+func handleSlashCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	switch i.ApplicationCommandData().Name {
+	case "ping":
+		fmt.Println("Comando /ping foi chamado!")
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "🏓 Pong!",
+			},
+		})
+	}
 }
 
 /* Sempre que uma mensagem for enviada ao servidor, essa função será chamada */
