@@ -10,6 +10,4 @@ COPY . .
 
 RUN npm run build
 
-EXPOSE 443
-
 CMD ["npm", "start"]

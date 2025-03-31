@@ -11,6 +11,9 @@ const client = new Client({
 
 client.once("ready", () => {
     console.log("Bot is ready")
+    if(process.env.PORT) {
+        console.log(`Bot using: ${process.env.PORT}`)
+    }
 })
 
 client.on("guildCreate", async (guild) => {
