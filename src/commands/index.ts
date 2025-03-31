@@ -1,5 +1,9 @@
-import * as ping from "./ping";
+import { pingCommand } from "./ping";
+import * as registerMessage from "./register-message"
+import * as clearChat from "./clear-chat"
 
-export const commands = {
-    ping,
-}
+export const commands = [
+  pingCommand,
+  registerMessage,
+  clearChat
+];

@@ -1,11 +1,13 @@
-import { Client, GatewayIntentBits } from 'discord.js';
-import { deployCommands } from './deploy-commands';
+import { Client, GatewayIntentBits, Message, OmitPartialGroupDMChannel } from 'discord.js';
+import { deployCommands, deleteOldCommands } from './deploy-commands';
 import { commands } from './commands';
+import { messageHandlers } from './messages';
+import { config } from './config';
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
-})
+});
 
 client.once("ready", () => {
     console.log("Bot is ready")
@@ -16,22 +18,31 @@ client.on("guildCreate", async (guild) => {
 });
 
 client.on("interactionCreate", async (interaction) => {
-    if (!interaction.isCommand()) {
-        return;
-    }
-    const { commandName } = interaction;
-    if (commands[commandName as keyof typeof commands]) {
-        commands[commandName as keyof typeof commands].execute(interaction);
-    }
-});
+    if (!interaction.isChatInputCommand()) return;
 
-client.on("messageCreate", (message) => {
-    if (message.author.bot) return;
-
-    if (message.content == "!ping") {
-        message.reply("Pong!")
-        client.emit("customPing", message)
+    const command = commands.find(cmd => cmd.data.name === interaction.commandName);
+    if (command) {
+        try {
+            await command.execute(interaction);
+        } catch (error) {
+            console.error("❌ Erro ao executar comando:", error);
+            await interaction.reply({ content: "❌ Ocorreu um erro ao executar este comando.", ephemeral: true });
+        }
     }
 });
 
-client.login(process.env.BOT_TOKEN)
+client.on("messageCreate", (data) => {
+    if (data.author.bot) return;
+    console.log(`Mensagem recebida: ${data.content}`);
+    
+    const key = data.content.split(" ")[0];
+
+    const handler = messageHandlers.get(key);
+    if (handler) {
+        handler(data);
+    }
+});[
+
+]
+deployCommands({ guildId: config.GUILD_TEST });
+client.login(config.BOT_TOKEN);
