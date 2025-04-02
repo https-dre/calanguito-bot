@@ -1,8 +1,9 @@
-import { Client, GatewayIntentBits, Message, OmitPartialGroupDMChannel } from 'discord.js';
-import { deployCommands, deleteOldCommands } from './deploy-commands';
+import { Client, GatewayIntentBits } from 'discord.js';
+import { deployCommands } from './deploy-commands';
 import { commands } from './commands';
 import { messageHandlers } from './messages';
 import { config } from './config';
+import { guild_create } from './usecases/guild-create';
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds,
@@ -16,9 +17,7 @@ client.once("ready", () => {
     }
 })
 
-client.on("guildCreate", async (guild) => {
-    await deployCommands({ guildId: guild.id });
-});
+client.on("guildCreate", guild_create);
 
 client.on("interactionCreate", async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
@@ -44,8 +43,6 @@ client.on("messageCreate", (data) => {
     if (handler) {
         handler(data);
     }
-});[
+});
 
-]
-deployCommands({ guildId: config.GUILD_TEST });
 client.login(config.BOT_TOKEN);
