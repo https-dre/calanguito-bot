@@ -4,10 +4,13 @@ import { commands } from './commands';
 import { messageHandlers } from './messages';
 import { config } from './config';
 import { guild_create } from './usecases/guild-create';
+import { guild_member_add } from './usecases/guild-member-add';
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
+    GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers
+]
 });
 
 client.once("ready", () => {
@@ -44,5 +47,9 @@ client.on("messageCreate", (data) => {
         handler(data);
     }
 });
+
+client.on("guildMemberAdd", async (member) => {
+    await guild_member_add(member);
+})
 
 client.login(config.BOT_TOKEN);
