@@ -1,4 +1,4 @@
-import Pool from "./conn"
+import Pool from "../data/conn"
 import { RowDataPacket } from 'mysql2/promise';
 
 export async function insertGuild(id: string, name: string): Promise<void> {
